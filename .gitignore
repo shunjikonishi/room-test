@@ -1,0 +1,4 @@
+node_modules/
+/roomframework/
+/room-sandbox/
+*.sublime-*

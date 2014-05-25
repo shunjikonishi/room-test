@@ -1,0 +1,32 @@
+@(token: String)
+
+@main("Welcome to Play") {
+<script src="@routes.Assets.at("javascripts/ext/roomframework/roomframework.js")"></script>
+<h1>Test1</h1>
+<script>
+$(function() {
+	var token = "@token"
+	console.log("test: " + token);
+	var socket = new room.Connection({
+		"url" : "ws://localhost:9000/test1",
+		"authToken" : token,
+		"logger" : console
+	}).onServerError(function(data) {
+		console.log("error: " + data);
+	});
+	$("#send").click(function() {
+		console.log("send");
+		socket.request({
+			"command": "echo",
+			"data" : $("#echo").val()
+		})
+	});
+	socket.addEventListener("echo", function(data) {
+		$("<p/>").append(data).prependTo($("#msg"));
+	})
+});
+</script>
+<input id="echo">
+<button id="send">Send</button>
+<div id="msg"></div>
+}
