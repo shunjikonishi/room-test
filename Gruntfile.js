@@ -56,10 +56,22 @@ module.exports = function(grunt) {
         },
         
         watch: {
-            files: [
-                'roomframework/src/*.js'
-            ],
-            tasks: ['jshint', 'concat', 'uglify', 'copy']
+            framework: {
+                files: [
+                    'roomframework/src/*.js'
+                ],
+                tasks: ['jshint', 'concat', 'uglify', 'copy'],
+            },
+            web: {
+                files: [
+                    "room-test/app/**/*",
+                    "room-test/public/**/*"
+                ],
+                tasks: [],
+                options: {
+                    livereload: true
+                }
+            }
         }
     });
  

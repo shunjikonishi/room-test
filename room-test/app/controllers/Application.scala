@@ -19,12 +19,23 @@ object Application extends Controller {
   def test1 = WebSocket.using[String] { implicit request =>
     val sid = request.session("sessionId")
     val ci = new CommandInvoker() with AuthSupport
-    ci.addAuthTokenProvider(CacheTokenProvider(sid))
+    ci.addAuthTokenProvider("room.auth", CacheTokenProvider(sid))
     ci.addHandler("echo") { command =>
       command.json(command.data)
     }
     ci.addHandler("log", new LogCommand("log: "))
+    ci.addAuthHandler("authTest") { command =>
+      val ret = command.data.as[String] == "test"
+      (ret, command.text(ret.toString))
+    }
     (ci.in, ci.out)
   }
+
+  def log = WebSocket.using[String] { implicit request =>
+    val ci = new CommandInvoker()
+    ci.addHandler("log", new LogCommand("log: "))
+    (ci.in, ci.out)
+  }
+
 
 }

@@ -2,28 +2,41 @@
 
 @main("Welcome to Play") {
 <script src="@routes.Assets.at("javascripts/ext/roomframework/roomframework.js")"></script>
-<h1>Test1</h1>
+<h1>Test4</h1>
 <script>
 $(function() {
-	var token = "@token"
-	console.log("test: " + token);
-	var socket = new room.Connection({
-		"url" : "ws://localhost:9000/test1",
-		"authToken" : token,
-		"logger" : console
-	}).onServerError(function(data) {
-		console.log("error: " + data);
-	});
-	$("#send").click(function() {
-		console.log("send");
-		socket.request({
-			"command": "echo",
-			"data" : $("#echo").val()
-		})
-	});
-	socket.addEventListener("echo", function(data) {
-		$("<p/>").append(data).prependTo($("#msg"));
-	})
+	function init() {
+		logger.log("test: " + token);
+		var socket = new room.Connection({
+			"url" : "ws://localhost:9000/test1",
+//			"authToken" : token,
+			"logger" : logger
+		}).onOpen(function(event) {
+			socket.request({
+				"command" : "authTest",
+				"data" : "test2",
+				"success" : function(data) {
+					console.log("authTest: " + data);
+				}
+			});
+		}).onServerError(function(data) {
+			logger.log("error: " + data);
+		});
+		$("#send").click(function() {
+			logger.log("send");
+			socket.request({
+				"command": "echo",
+				"data" : $("#echo").val()
+			})
+		});
+		socket.addEventListener("echo", function(data) {
+			$("<p/>").append(data).prependTo($("#msg"));
+		});
+	}
+	var token = "@token",
+		//logger = new room.logger.WsLogger("ws://localhost:9000/log");
+		logger = console;
+	setTimeout(init, 0);
 });
 </script>
 <input id="echo">
