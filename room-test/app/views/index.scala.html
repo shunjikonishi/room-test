@@ -2,44 +2,66 @@
 
 @main("Welcome to Play") {
 <script src="@routes.Assets.at("javascripts/ext/roomframework/roomframework.js")"></script>
-<h1>Test4</h1>
+<h1>Test7</h1>
 <script>
 $(function() {
-	function init() {
-		logger.log("test: " + token);
-		var socket = new room.Connection({
-			"url" : "ws://localhost:9000/test1",
-//			"authToken" : token,
-			"logger" : logger
-		}).onOpen(function(event) {
-			socket.request({
-				"command" : "authTest",
-				"data" : "test2",
-				"success" : function(data) {
-					console.log("authTest: " + data);
-				}
-			});
-		}).onServerError(function(data) {
-			logger.log("error: " + data);
-		});
-		$("#send").click(function() {
-			logger.log("send");
-			socket.request({
-				"command": "echo",
-				"data" : $("#echo").val()
-			})
-		});
-		socket.addEventListener("echo", function(data) {
-			$("<p/>").append(data).prependTo($("#msg"));
-		});
-	}
 	var token = "@token",
 		//logger = new room.logger.WsLogger("ws://localhost:9000/log");
 		logger = console;
-	setTimeout(init, 0);
+	logger.log("test: " + token);
+	var socket = new room.Connection({
+		"url" : "ws://localhost:9000/test1",
+		"authToken" : token,
+		"logger" : logger
+	}).onOpen(function(event) {
+		/*
+		socket.request({
+			"command" : "authTest",
+			"data" : "test2",
+			"success" : function(data) {
+				console.log("authTest: " + data);
+			}
+		});
+		*/
+	}).onServerError(function(data) {
+		logger.log("error: " + data);
+	});
+	$("#send").click(function() {
+		logger.log("send");
+		socket.request({
+			"command": "echo",
+			"data" : $("#echo").val()
+		})
+	});
+	$("#close").click(function() {
+		logger.log("close");
+		socket.request({
+			"command": "close"
+		})
+	})
+	socket.addEventListener("echo", function(data) {
+		$("<p/>").append(data).prependTo($("#msg"));
+	});
+	var cnt = 0, 
+		start = new Date().getTime(),
+		$cnt = $("#cnt"),
+		$time = $("#time");
+	function increment() {
+		cnt++;
+		var time = Math.abs((new Date().getTime() - start) / 100);
+		$cnt.text(cnt);
+		$time.text(time);
+		setTimeout(increment, 100);
+	}
+	setTimeout(increment, 100);
 });
 </script>
 <input id="echo">
 <button id="send">Send</button>
+<button id="close">Close</button>
 <div id="msg"></div>
+<div>
+	<div>Cnt: <span id="cnt"></span></div>
+	<div>Time: <span id="time"></span></div>
+</div>
 }

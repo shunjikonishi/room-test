@@ -3,6 +3,7 @@ package controllers
 import java.util.UUID
 import play.api._
 import play.api.mvc._
+import play.api.libs.json._
 import roomframework.command._
 import roomframework.command.commands._
 
@@ -18,7 +19,11 @@ object Application extends Controller {
 
   def test1 = WebSocket.using[String] { implicit request =>
     val sid = request.session("sessionId")
-    val ci = new CommandInvoker() with AuthSupport
+    val ci = new CommandInvoker() with AuthSupport {
+      override def onDisconnect = {
+        println("!!!!!!!!!!!!!! disconnect")
+      }
+    }
     ci.addAuthTokenProvider("room.auth", CacheTokenProvider(sid))
     ci.addHandler("echo") { command =>
       command.json(command.data)
@@ -26,7 +31,11 @@ object Application extends Controller {
     ci.addHandler("log", new LogCommand("log: "))
     ci.addAuthHandler("authTest") { command =>
       val ret = command.data.as[String] == "test"
-      (ret, command.text(ret.toString))
+      (ret, command.json(JsBoolean(ret)))
+    }
+    ci.addHandler("close") { command =>
+      ci.close
+      CommandResponse.None
     }
     (ci.in, ci.out)
   }
