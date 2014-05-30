@@ -11,10 +11,10 @@ object Application extends Controller {
 
   def index = Action { implicit request =>
     val sid = session.get("sessionId").getOrElse(UUID.randomUUID.toString)
-    val token = CacheTokenProvider(sid).getCurrentToken
-    Ok(views.html.index(token)).withSession(
+    val token = CacheTokenProvider(sid).currentToken
+    Ok(views.html.index(sid, token)).withSession(
       "sessionId" -> sid
-    )
+    ).withCookies(Cookie("test", sid))
   }
 
   def test1 = WebSocket.using[String] { implicit request =>
@@ -32,10 +32,6 @@ object Application extends Controller {
     ci.addAuthHandler("authTest") { command =>
       val ret = command.data.as[String] == "test"
       (ret, command.json(JsBoolean(ret)))
-    }
-    ci.addHandler("close") { command =>
-      ci.close
-      CommandResponse.None
     }
     (ci.in, ci.out)
   }

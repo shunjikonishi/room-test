@@ -1,8 +1,8 @@
-@(token: String)
+@(sid: String, token: String)
 
 @main("Welcome to Play") {
 <script src="@routes.Assets.at("javascripts/ext/roomframework/roomframework.js")"></script>
-<h1>Test7</h1>
+<h1>Test: @sid</h1>
 <script>
 $(function() {
 	var token = "@token",
