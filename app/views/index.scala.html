@@ -5,63 +5,48 @@
 <h1>Test: @sid</h1>
 <script>
 $(function() {
-	var token = "@token",
-		//logger = new room.logger.WsLogger("ws://localhost:9000/log");
-		logger = console;
-	logger.log("test: " + token);
-	var socket = new room.Connection({
-		"url" : "ws://localhost:9000/test1",
-		"authToken" : token,
-		"logger" : logger
-	}).onOpen(function(event) {
-		/*
-		socket.request({
-			"command" : "authTest",
-			"data" : "test2",
-			"success" : function(data) {
-				console.log("authTest: " + data);
-			}
-		});
-		*/
-	}).onServerError(function(data) {
-		logger.log("error: " + data);
-	});
-	$("#send").click(function() {
-		logger.log("send");
-		socket.request({
-			"command": "echo",
-			"data" : $("#echo").val()
-		})
-	});
-	$("#close").click(function() {
-		logger.log("close");
-		socket.request({
-			"command": "close"
-		})
-	})
-	socket.addEventListener("echo", function(data) {
-		$("<p/>").append(data).prependTo($("#msg"));
-	});
-	var cnt = 0, 
-		start = new Date().getTime(),
-		$cnt = $("#cnt"),
-		$time = $("#time");
-	function increment() {
-		cnt++;
-		var time = Math.abs((new Date().getTime() - start) / 100);
-		$cnt.text(cnt);
-		$time.text(time);
-		setTimeout(increment, 100);
+	function normalize(obj) {
+		return JSON.stringify(room.logger.normalizeFunc(obj));
 	}
-	setTimeout(increment, 100);
+	function TableLogger($table) {
+		this.log = function() {
+			var col1, col2 = null,
+				$tr = $("<tr><td></td><td></td></tr>");
+console.log("log", arguments);
+			if (arguments.length == 0) {
+				return;
+			} else if (arguments.length == 1) {
+				col1 = "";
+				col2 = normalize(arguments[0]);
+			} else if (arguments.length == 2) {
+				col1 = arguments[0];
+				col2 = normalize(arguments[1]);
+			} else {
+				col1 = arguments[0];
+				col2 = [];
+				for (var i=1; i<arguments.length; i++) {
+					col2.push(arguments[i]);
+				}
+				col2 = normalize(col2);
+			}
+			$tr.find("td:first").text(col1);
+			$tr.find("td:last").text(col2);
+			$table.append($tr);
+		};
+	};
+	var token = "@token",
+		logger = console;
+	var socket = new room.Connection({
+		"url" : "ws://" + location.host + "/test1",
+		"logger" : new TableLogger($("#table")),
+		"authToken" : token
+	});
+console.log("test1");
 });
 </script>
 <input id="echo">
 <button id="send">Send</button>
 <button id="close">Close</button>
-<div id="msg"></div>
-<div>
-	<div>Cnt: <span id="cnt"></span></div>
-	<div>Time: <span id="time"></span></div>
-</div>
+<table id="table" border="1">
+</table>
 }

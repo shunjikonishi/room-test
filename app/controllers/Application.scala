@@ -3,6 +3,8 @@ package controllers
 import java.util.UUID
 import play.api._
 import play.api.mvc._
+import play.api.data._
+import play.api.data.Forms._
 import play.api.libs.json._
 import roomframework.command._
 import roomframework.command.commands._
@@ -15,6 +17,13 @@ object Application extends Controller {
     Ok(views.html.index(sid, token)).withSession(
       "sessionId" -> sid
     ).withCookies(Cookie("test", sid))
+  }
+
+  def ajax = Action { implicit request =>
+    val str = Form("str" -> text).bindFromRequest
+    val sid = session.get("sessionId")
+    val c = request.cookies.get("test")
+    Ok(str + ", " + sid + ", " + c)
   }
 
   def test1 = WebSocket.using[String] { implicit request =>
