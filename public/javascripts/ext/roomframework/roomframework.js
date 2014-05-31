@@ -86,9 +86,7 @@ $(function() {
 					"command" : settings.authCommand,
 					"data" : settings.authToken,
 					"success" : function(data) {
-						if (data.status == "OK" && data.token) {
-							settings.authToken = data.token;
-						}
+						settings.authToken = data;
 					}
 				});
 			}

@@ -5,14 +5,30 @@
 <h1>Test: @sid</h1>
 <script>
 $(function() {
+	function format(date, format) {
+		if (!format) format = 'MM-DD hh:mm:ss';
+		format = format.replace(/YYYY/g, date.getFullYear());
+		format = format.replace(/MM/g, ('0' + (date.getMonth() + 1)).slice(-2));
+		format = format.replace(/DD/g, ('0' + date.getDate()).slice(-2));
+		format = format.replace(/hh/g, ('0' + date.getHours()).slice(-2));
+		format = format.replace(/mm/g, ('0' + date.getMinutes()).slice(-2));
+		format = format.replace(/ss/g, ('0' + date.getSeconds()).slice(-2));
+		if (format.match(/S/g)) {
+			var milliSeconds = ('00' + date.getMilliseconds()).slice(-3);
+			var length = format.match(/S/g).length;
+			for (var i = 0; i < length; i++) {
+				format = format.replace(/S/, milliSeconds.substring(i, i + 1));
+			}
+		}
+		return format;
+	};
 	function normalize(obj) {
 		return JSON.stringify(room.logger.normalizeFunc(obj));
 	}
 	function TableLogger($table) {
 		this.log = function() {
 			var col1, col2 = null,
-				$tr = $("<tr><td></td><td></td></tr>");
-console.log("log", arguments);
+				$tr = $("<tr><td nowrap></td><td></td><td></td></tr>");
 			if (arguments.length == 0) {
 				return;
 			} else if (arguments.length == 1) {
@@ -29,7 +45,8 @@ console.log("log", arguments);
 				}
 				col2 = normalize(col2);
 			}
-			$tr.find("td:first").text(col1);
+			$tr.find("td:first").text(format(new Date()));
+			$tr.find("td:eq(1)").text(col1);
 			$tr.find("td:last").text(col2);
 			$table.append($tr);
 		};
