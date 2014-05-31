@@ -17,11 +17,12 @@ import play.api.libs.concurrent.Execution.Implicits._
 
 object Application extends Controller {
 
+  lazy val redis = sys.env.get("REDISCLOUD_URL").map(RedisService(_))
+
   private def createAuthProvider(sid: String) = {
-    sys.env.get("REDISCLOUD_URL").map( url =>
-      RedisTokenProvider(RedisService(url), sid)
-    ).getOrElse(CacheTokenProvider(sid))
+    redis.map(RedisTokenProvider(_, sid)).getOrElse(CacheTokenProvider(sid))
   }
+
   def index = Action { implicit request =>
     val sid = session.get("sessionId").getOrElse(UUID.randomUUID.toString)
     val token = createAuthProvider(sid).currentToken
