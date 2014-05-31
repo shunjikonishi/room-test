@@ -17,9 +17,14 @@ import play.api.libs.concurrent.Execution.Implicits._
 
 object Application extends Controller {
 
+  private def createAuthProvider(sid: String) = {
+    sys.env.get("REDISCLOUD_URL").map( url =>
+      RedisTokenProvider(RedisService(url), sid)
+    ).getOrElse(CacheTokenProvider(sid))
+  }
   def index = Action { implicit request =>
     val sid = session.get("sessionId").getOrElse(UUID.randomUUID.toString)
-    val token = CacheTokenProvider(sid).currentToken
+    val token = createAuthProvider(sid).currentToken
     Ok(views.html.index(sid, token)).withSession(
       "sessionId" -> sid
     ).withCookies(Cookie("test", sid))
@@ -56,9 +61,7 @@ object Application extends Controller {
         CommandResponse.None
       }
     }
-    val authProvider = sys.env.get("REDISCLOUD_URL").map( url =>
-      RedisTokenProvider(RedisService(url), sid)
-    ).getOrElse(CacheTokenProvider(sid))
+    val authProvider = createAuthProvider(sid)
     ci.addAuthTokenProvider("room.auth", authProvider)
     ci.addHandler("echo") { command =>
       command.json(command.data)
