@@ -25,6 +25,11 @@ $(function() {
 	function normalize(obj) {
 		return JSON.stringify(room.logger.normalizeFunc(obj));
 	}
+	function addEvent(name) {
+		$(window).on(name, function(event) {
+			logger.log(name, "!!!!!!");
+		})
+	}
 	function TableLogger($table) {
 		this.log = function() {
 			var col1, col2 = null,
@@ -52,13 +57,14 @@ $(function() {
 		};
 	};
 	var token = "@token",
-		logger = console;
+		logger = new TableLogger($("#table"));
 	var socket = new room.Connection({
 		"url" : "ws://" + location.host + "/test1",
-		"logger" : new TableLogger($("#table")),
+		"logger" : logger,
 		"authToken" : token
 	});
 	socket.on("polling", function() {
+		logger.log("polling", "window.closed=" + window.closed);
 		//Do nothing
 	});
 	$("#polling").click(function() {
@@ -67,7 +73,22 @@ $(function() {
 			"command" : "polling",
 			"data" : interval
 		});
-	})
+	});
+	var events = [
+		"beforeunload",
+		"blur",
+		"change",
+		"close",
+		"focus",
+		"load",
+		"unload",
+		"pageshow",
+		"pagehide"
+	];
+	for (var i=0; i<events.length; i++) {
+		addEvent(events[i]);
+	}
+
 });
 </script>
 Polling interval: <input id="interval" value="30">

@@ -7,6 +7,7 @@ import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
 import play.api.libs.json._
+import roomframework.redis._
 import roomframework.command._
 import roomframework.command.commands._
 import scala.concurrent.duration._
@@ -55,7 +56,10 @@ object Application extends Controller {
         CommandResponse.None
       }
     }
-    ci.addAuthTokenProvider("room.auth", CacheTokenProvider(sid))
+    val authProvider = sys.env.get("REDISCLOUD_URL").map( url =>
+      RedisTokenProvider(RedisService(url), sid)
+    ).getOrElse(CacheTokenProvider(sid))
+    ci.addAuthTokenProvider("room.auth", authProvider)
     ci.addHandler("echo") { command =>
       command.json(command.data)
     }
