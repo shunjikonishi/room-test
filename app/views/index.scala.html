@@ -58,12 +58,20 @@ $(function() {
 		"logger" : new TableLogger($("#table")),
 		"authToken" : token
 	});
-console.log("test1");
+	socket.on("polling", function() {
+		//Do nothing
+	});
+	$("#polling").click(function() {
+		var interval = parseInt($("#interval").val());
+		socket.request({
+			"command" : "polling",
+			"data" : interval
+		});
+	})
 });
 </script>
-<input id="echo">
-<button id="send">Send</button>
-<button id="close">Close</button>
+Polling interval: <input id="interval" value="30">
+<button id="polling">Polling</button>
 <table id="table" border="1">
 </table>
 }

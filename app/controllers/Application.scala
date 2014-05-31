@@ -2,12 +2,17 @@ package controllers
 
 import java.util.UUID
 import play.api._
+import play.api.Play.current
 import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
 import play.api.libs.json._
 import roomframework.command._
 import roomframework.command.commands._
+import scala.concurrent.duration._
+import play.api.libs.concurrent.Akka
+import akka.actor.Cancellable
+import play.api.libs.concurrent.Execution.Implicits._
 
 object Application extends Controller {
 
@@ -27,10 +32,27 @@ object Application extends Controller {
   }
 
   def test1 = WebSocket.using[String] { implicit request =>
+    request.headers.get("user-agent").foreach(Logger.info(_))
     val sid = request.session("sessionId")
     val ci = new CommandInvoker() with AuthSupport {
+      var schedule: Option[Cancellable] = None
+
       override def onDisconnect = {
+        schedule.foreach(_.cancel)
+        schedule = None
         println("!!!!!!!!!!!!!! disconnect")
+      }
+      addHandler("polling") { command =>
+        if (schedule.isEmpty) {
+          var seq = 0
+          val interval = command.data.as[Int]
+          val c = Akka.system.scheduler.schedule(interval seconds, interval seconds) {
+            seq += 1
+            send(new CommandResponse("polling", JsNumber(seq)))
+          }
+          schedule = Some(c)
+        }
+        CommandResponse.None
       }
     }
     ci.addAuthTokenProvider("room.auth", CacheTokenProvider(sid))
