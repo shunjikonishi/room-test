@@ -137,10 +137,10 @@ $(function() {
 				settings.onClose(event);
 			}
 			if (retryCount < settings.maxRetry) {
-				retryCount++;
 				setTimeout(function() {
 					socket = createWebSocket();
 				}, retryCount * 1000);
+				retryCount++;
 			}
 		}
 		function onError(event) {
