@@ -16,6 +16,7 @@ module.exports = function(grunt) {
         concat: {
             dist : {
                 src : [
+                    "../roomframework/src/room.utils.js",
                     "../roomframework/src/room.connection.js",
                     "../roomframework/src/room.cache.js",
                     "../roomframework/src/room.logger.js"
@@ -27,6 +28,7 @@ module.exports = function(grunt) {
         uglify: {
             build: {
                 files: [{
+                    "../roomframework/dist/room.utils.min.js": "../roomframework/src/room.utils.js",
                     "../roomframework/dist/room.connection.min.js": "../roomframework/src/room.connection.js",
                     "../roomframework/dist/room.cache.min.js": "../roomframework/src/room.cache.js",
                     "../roomframework/dist/room.logger.min.js": "../roomframework/src/room.logger.js",

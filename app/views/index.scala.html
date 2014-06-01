@@ -64,15 +64,19 @@ $(function() {
 		"authToken" : token
 	});
 	socket.on("polling", function() {
-		logger.log("polling", "window.closed=" + window.closed);
+		logger.log("polling", "window.closed=" + window.closed + ", document.hidden=" + document.hidden);
 		//Do nothing
 	});
 	$("#polling").click(function() {
 		var interval = parseInt($("#interval").val());
-		socket.request({
-			"command" : "polling",
-			"data" : interval
-		});
+		if (room.utils.isMobile()) {
+			socket.sendNoop(interval);
+		} else {
+			socket.request({
+				"command" : "polling",
+				"data" : interval
+			});
+		}
 	});
 	var events = [
 		"beforeunload",

@@ -1,6 +1,20 @@
 if (typeof(room) === "undefined") room = {};
 
 $(function() {
+	function isMobile() {
+		return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+	}
+	function isIOS() {
+		return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+	}
+	room.utils = {
+		"isMobile" : isMobile,
+		"isIOS" : isIOS
+	};
+});
+if (typeof(room) === "undefined") room = {};
+
+$(function() {
 	"use strict";
 	var visibilityPrefix = (function() {
 		var key = "hidden",
@@ -27,8 +41,12 @@ $(function() {
 		"authError" : null,
 		"retryInterval" : 1000,
 		"watchInterval" : 60,
+		"noopCommand" : "noop",
 		"logger" : nullLogger
 	};
+	if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+		visibilityChangeProp = "pageshow";
+	}
 	function isDocumentVisible() {
 		return !document[visibilityProp];
 	}
@@ -217,6 +235,15 @@ $(function() {
 				socket = createWebSocket();
 			}
 		}
+		function sendNoop(interval, sendIfHidden, commandName) {
+			return setInterval(function() {
+				if (isConnected() && (sendIfHidden || isDocumentVisible())) {
+					request({
+						"command" : commandName || "noop"
+					});
+				}
+			}, interval);
+		}
 		if (typeof(settings) === "string") {
 			settings = {
 				"url" : settings
@@ -236,14 +263,17 @@ $(function() {
 			watchHandle = setInterval(watch, settings.watchInterval * 1000),
 			socket = createWebSocket();
 		$(window).on("beforeunload", close);
-		logger.log("visibility", visibilityProp);
+logger.log("visibility", visibilityProp, visibilityChangeProp);
 		$(document).on(visibilityChangeProp, function() {
 			var bVisible = isDocumentVisible();
-			logger.log("visibilityChange", "visible=" + bVisible);
+			logger.log(visibilityChangeProp, "visible=" + bVisible);
 			if (bVisible && !isConnected()) {
 				socket = createWebSocket();
 			}
 		});
+		if (settings.noopCommand) {
+			on("noopCommand", function() {});
+		}
 
 
 		$.extend(this, {
