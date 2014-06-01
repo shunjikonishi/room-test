@@ -2,18 +2,36 @@ if (typeof(room) === "undefined") room = {};
 
 $(function() {
 	"use strict";
-
-	var nullLogger = {
-			"log" : function() {}
-		}, 
-		defaultSettings = {
-			"maxRetry" : 5,
-			"authCommand" : "room.auth",
-			"authError" : null,
-			"retryInterval" : 1000,
-			"watchInterval" : 60,
-			"logger" : nullLogger
-		};
+	var visibilityPrefix = (function() {
+		var key = "hidden",
+			prefix = ["webkit", "moz", "ms"];
+		if (key in document) {
+			return "";
+		}
+		key = "Hidden";
+		for (var i=0; i<prefix.length; i++) {
+			if (prefix + key in document) {
+				return prefix;
+			}
+		}
+		return "";
+	})(),
+	visibilityProp = visibilityPrefix ? visibilityPrefix + "Hidden" : "hidden",
+	visibilityChangeProp = visibilityPrefix + "visibilitychange",
+	nullLogger = {
+		"log" : function() {}
+	}, 
+	defaultSettings = {
+		"maxRetry" : 5,
+		"authCommand" : "room.auth",
+		"authError" : null,
+		"retryInterval" : 1000,
+		"watchInterval" : 60,
+		"logger" : nullLogger
+	};
+	function isDocumentVisible() {
+		return !document[visibilityProp];
+	}
 
 	/**
 	 * settings
@@ -146,7 +164,7 @@ $(function() {
 					if (!isConnected()) {
 						socket = createWebSocket();
 					}
-				}, retryCount * retryInterval);
+				}, retryCount * settings.retryInterval);
 				retryCount++;
 			}
 		}
@@ -218,6 +236,14 @@ $(function() {
 			watchHandle = setInterval(watch, settings.watchInterval * 1000),
 			socket = createWebSocket();
 		$(window).on("beforeunload", close);
+		logger.log("visibility", visibilityProp);
+		$(document).on(visibilityChangeProp, function() {
+			var bVisible = isDocumentVisible();
+			logger.log("visibilityChange", "visible=" + bVisible);
+			if (bVisible && !isConnected()) {
+				socket = createWebSocket();
+			}
+		});
 
 
 		$.extend(this, {
