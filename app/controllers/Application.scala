@@ -61,6 +61,9 @@ object Application extends Controller {
         }
         CommandResponse.None
       }
+      addHandler("noop") { command =>
+        CommandResponse.None
+      }
     }
     val authProvider = createAuthProvider(sid)
     ci.addAuthTokenProvider("room.auth", authProvider)
