@@ -41,7 +41,7 @@ object Application extends Controller {
   def test1 = WebSocket.using[String] { implicit request =>
     request.headers.get("user-agent").foreach(Logger.info(_))
     val sid = request.session("sessionId")
-    val ci = new CommandInvoker() with AuthSupport {
+    val ci = new CommandInvoker() with AuthSupport with PollingSupport {
       var schedule: Option[Cancellable] = None
 
       override def onDisconnect = {
@@ -62,6 +62,7 @@ object Application extends Controller {
         CommandResponse.None
       }
     }
+    ci.startPolling()
     val authProvider = createAuthProvider(sid)
     ci.addAuthTokenProvider("room.auth", authProvider)
     ci.addHandler("echo") { command =>
