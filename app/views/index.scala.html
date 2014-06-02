@@ -56,7 +56,20 @@ $(function() {
 			$table.append($tr);
 		};
 	};
+	function CompositeLogger(loggers) {
+		this.log = function() {
+			for (var i=0; i<loggers.length; i++) {
+				loggers[i].log.apply(loggers[i], arguments);
+			}
+		};
+	};
 	var token = "@token",
+		/*
+		logger = new CompositeLogger([
+			new TableLogger($("#table")),
+			new room.logger.WsLogger("ws://" + location.host + "/log")
+		]);
+		*/
 		logger = new TableLogger($("#table"));
 	var socket = new room.Connection({
 		"url" : "ws://" + location.host + "/test1",
