@@ -24,7 +24,7 @@ object Application extends Controller {
   }
 
   def index = Action { implicit request =>
-    val sid = session.get("sessionId").getOrElse(UUID.randomUUID.toString)
+    val sid = request.session.get("sessionId").getOrElse(UUID.randomUUID.toString)
     val token = createAuthProvider(sid).currentToken
     Ok(views.html.index(sid, token)).withSession(
       "sessionId" -> sid
@@ -33,7 +33,7 @@ object Application extends Controller {
 
   def ajax = Action { implicit request =>
     val str = Form("str" -> text).bindFromRequest
-    val sid = session.get("sessionId")
+    val sid = request.session.get("sessionId")
     val c = request.cookies.get("test")
     Ok(str + ", " + sid + ", " + c)
   }
