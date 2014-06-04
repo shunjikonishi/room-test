@@ -36,7 +36,15 @@ $(function() {
 			logger.log(name, msg);
 			eventTimes[name] = now;
 	}
+
 	function TableLogger($table) {
+		function onClick() {
+			var clazz = $(this).attr("data-class");
+			if (clazz) {
+				$table.find(".info").removeClass("info");
+				$table.find("." + clazz).addClass("info");
+			}
+		}
 		this.log = function() {
 			var col1, col2 = null,
 				$tr = $("<tr><td nowrap></td><td></td><td></td></tr>");
@@ -59,6 +67,11 @@ $(function() {
 			$tr.find("td:first").text(format(new Date()));
 			$tr.find("td:eq(1)").text(col1);
 			$tr.find("td:last").text(col2);
+			if (col1) {
+				$tr.addClass(col1);
+				$tr.attr("data-class", col1);
+				$tr.click(onClick);
+			}
 			$table.append($tr);
 		};
 	};
@@ -154,20 +167,21 @@ $(function() {
 	</div>
 	<div>
 		<p>
-			<label style="width:180px;">サーバーからポーリング：</label>
-			<input id="server-interval" value="30" size="2"/> 秒間隔 
+			<label style="width:180px;">サーバーからポーリング：</label><br>
+			<input id="server-interval" value="30" size="2"/> 秒間隔 <br>
 			<button id="server-polling" class="btn btn-info">実行</button>
 			<button id="server-polling-stop" class="btn btn-danger">停止</button>
 		</p>
 		<p>
-			<label style="width:180px;">クライアントからポーリング：</label>
-			<input id="client-interval" value="30" size="2"/> 秒間隔 
+			<label style="width:180px;">クライアントからポーリング：</label><br>
+			<input id="client-interval" value="30" size="2"/> 秒間隔 <br>
+			<input type="checkbox" id="client-polling-background"> バックグラウンドでも実行<br>
 			<button id="client-polling" class="btn btn-info">実行</button>
 			<button id="client-polling-stop" class="btn btn-danger">停止</button>
-			<input type="checkbox" id="client-polling-background"> バックグラウンドでも実行
-			</p>
+		</p>
 	<hr>
 	<table id="table" border="1" class="table">
 	</table>
 </div>
+<a href="https://github.com/you"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/e7bbb0521b397edbd5fe43e7f760759336b5e05f/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677265656e5f3030373230302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_green_007200.png"></a>
 }
