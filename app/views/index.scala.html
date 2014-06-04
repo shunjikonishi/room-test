@@ -1,8 +1,7 @@
 @(sid: String, token: String)
 
-@main("Welcome to Play") {
+@main("イベントテスト") {
 <script src="@routes.Assets.at("javascripts/ext/roomframework/roomframework.js")"></script>
-<h1>Test: @sid</h1>
 <script>
 $(function() {
 	function format(date, format) {
@@ -23,12 +22,19 @@ $(function() {
 		return format;
 	};
 	function normalize(obj) {
-		return JSON.stringify(room.logger.normalizeFunc(obj));
+		var msg = room.utils.stripFunc(obj);
+		if (typeof(msg) === "object") {
+			msg = JSON.stringify(msg);
+		}
+		return msg;
 	}
-	function addEvent(name) {
-		$(window).on(name, function(event) {
-			logger.log(name, "!!!!!!");
-		})
+	function handleEvent(event) {
+		var name = event.type,
+			now = new Date().getTime(),
+			prevTime = eventTimes[name],
+			msg = prevTime ? "前イベントからの経過時間: " + (now - prevTime) + "ms" : "初回";
+			logger.log(name, msg);
+			eventTimes[name] = now;
 	}
 	function TableLogger($table) {
 		this.log = function() {
@@ -56,41 +62,47 @@ $(function() {
 			$table.append($tr);
 		};
 	};
-	function CompositeLogger(loggers) {
-		this.log = function() {
-			for (var i=0; i<loggers.length; i++) {
-				loggers[i].log.apply(loggers[i], arguments);
-			}
-		};
-	};
 	var token = "@token",
-		/*
-		logger = new CompositeLogger([
-			new TableLogger($("#table")),
-			new room.logger.WsLogger("ws://" + location.host + "/log")
-		]);
-		*/
-		logger = new TableLogger($("#table"));
-	var socket = new room.Connection({
-		"url" : "ws://" + location.host + "/test1",
-		"logger" : logger,
-		"authToken" : token
-	});
+		logger = new TableLogger($("#table")),
+		eventTimes = {},
+		clientPollingHandle = 0,
+		socket = new room.Connection({
+			"url" : "ws://" + location.host + "/test1",
+			"logger" : logger,
+			"authToken" : token
+		});
 	socket.on("polling", function() {
 		logger.log("polling", "window.closed=" + window.closed + ", document.hidden=" + document.hidden);
 		//Do nothing
 	});
-	$("#polling").click(function() {
-		var interval = parseInt($("#interval").val());
-		if (room.utils.isMobile()) {
-			socket.sendNoop(interval);
-		} else {
-			socket.request({
-				"command" : "polling",
-				"data" : interval
-			});
+	$("#server-polling").click(function() {
+		var interval = parseInt($("#server-interval").val());
+		socket.request({
+			"command" : "polling",
+			"data" : interval
+		});
+	});
+	$("#server-polling-stop").click(function() {
+		socket.request({
+			"command" : "stopPolling",
+			"success" : function(data) {
+				logger.log("stopPolling", data)
+			}
+		});
+	});
+	$("#client-polling").click(function() {
+		var interval = parseInt($("#client-interval").val()),
+			background = $("#client-polling-background").is(":checked");
+		if (clientPollingHandle) {
+			clearInterval(clientPollingHandle);
 		}
-		$(this).prop("disabled", true);
+		clientPollingHandle = socket.sendNoop(interval, background);
+	});
+	$("#client-polling-stop").click(function() {
+		if (clientPollingHandle) {
+			clearInterval(clientPollingHandle);
+		}
+		clientPollingHandle = 0;
 	});
 	var events = [
 		"beforeunload",
@@ -104,13 +116,58 @@ $(function() {
 		"pagehide"
 	];
 	for (var i=0; i<events.length; i++) {
-		addEvent(events[i]);
+		$(window).on(events[i], handleEvent);
 	}
-
+	$(document).on("visibilitychange", handleEvent);
+	setInterval(function(event) {
+		handleEvent({
+			"type" : "setInterval"
+		});
+	}, 30 * 1000);
+	$("#btnDesc").click(function() {
+		$("#desc").toggle();
+	})
 });
 </script>
-Polling interval: <input id="interval" value="30">
-<button id="polling">Polling</button>
-<table id="table" border="1">
-</table>
+<div class="container">
+	<h1>ブラウザイベントのテスト</h1>
+	<div>
+		<div class="pull-right"><button id="btnDesc" class="btn btn-info">説明</button></div>
+		<div id="desc" class="alert alert-info" style="display:none;">
+			<p>ブラウザの各種イベント発生時にログを出力します。</p>
+			<p>対象としているイベントは下記です。(一部のイベントはブラウザクローズ時に発生するものなので見ることはできません。)</p>
+			<ul>
+				<li>window#beforeunload</li>
+				<li>window#blur</li>
+				<li>window#change</li>
+				<li>window#close</li>
+				<li>window#focus</li>
+				<li>window#load</li>
+				<li>window#unload</li>
+				<li>window#pageshow</li>
+				<li>window#pagehide</li>
+				<li>document#visibilitychang</li>
+			</ul>
+			<p>それとは別にWebSocketで発生する各種イベントも出力しています。</p>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+	<div>
+		<p>
+			<label style="width:180px;">サーバーからポーリング：</label>
+			<input id="server-interval" value="30" size="2"/> 秒間隔 
+			<button id="server-polling" class="btn btn-info">実行</button>
+			<button id="server-polling-stop" class="btn btn-danger">停止</button>
+		</p>
+		<p>
+			<label style="width:180px;">クライアントからポーリング：</label>
+			<input id="client-interval" value="30" size="2"/> 秒間隔 
+			<button id="client-polling" class="btn btn-info">実行</button>
+			<button id="client-polling-stop" class="btn btn-danger">停止</button>
+			<input type="checkbox" id="client-polling-background"> バックグラウンドでも実行
+			</p>
+	<hr>
+	<table id="table" border="1" class="table">
+	</table>
+</div>
 }

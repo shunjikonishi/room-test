@@ -50,16 +50,23 @@ object Application extends Controller {
         println("!!!!!!!!!!!!!! disconnect")
       }
       addHandler("polling") { command =>
-        if (schedule.isEmpty) {
-          var seq = 0
-          val interval = command.data.as[Int]
-          val c = Akka.system.scheduler.schedule(interval seconds, interval seconds) {
-            seq += 1
-            send(new CommandResponse("polling", JsNumber(seq)))
-          }
-          schedule = Some(c)
+        schedule.foreach(_.cancel)
+        var seq = 0
+        val interval = command.data.as[Int]
+        val c = Akka.system.scheduler.schedule(interval seconds, interval seconds) {
+          seq += 1
+          send(new CommandResponse("polling", JsNumber(seq)))
         }
-        CommandResponse.None
+        schedule = Some(c)
+        command.text("Polling interval is " + interval + " seconds.")
+      }
+      addHandler("stopPolling") { command =>
+        val ret = schedule.map { c =>
+          c.cancel
+          true
+        }.getOrElse(false)
+        schedule = None
+        command.json(JsBoolean(ret))
       }
       addHandler("noop") { command =>
         CommandResponse.None
