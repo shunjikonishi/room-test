@@ -32,7 +32,7 @@ $(function() {
 		var name = event.type,
 			now = new Date().getTime(),
 			prevTime = eventTimes[name],
-			msg = prevTime ? "前イベントからの経過時間: " + (now - prevTime) + "ms" : "初回";
+			msg = prevTime ? (now - prevTime) + "ms" : "初回";
 			logger.log(name, msg);
 			eventTimes[name] = now;
 	}
@@ -42,7 +42,7 @@ $(function() {
 			var clazz = $(this).attr("data-class");
 			if (clazz) {
 				$table.find(".info").removeClass("info");
-				$table.find("." + clazz).addClass("info");
+				$table.find(".x-" + clazz).addClass("info");
 			}
 		}
 		this.log = function() {
@@ -68,7 +68,7 @@ $(function() {
 			$tr.find("td:eq(1)").text(col1);
 			$tr.find("td:last").text(col2);
 			if (col1) {
-				$tr.addClass(col1);
+				$tr.addClass("x-" + col1);
 				$tr.attr("data-class", col1);
 				$tr.click(onClick);
 			}
@@ -145,7 +145,7 @@ $(function() {
 <div class="container">
 	<h1>ブラウザイベントのテスト</h1>
 	<div>
-		<div class="pull-right"><button id="btnDesc" class="btn btn-info">説明</button></div>
+		<div><button id="btnDesc" class="btn btn-info">説明</button></div>
 		<div id="desc" class="alert alert-info" style="display:none;">
 			<p>ブラウザの各種イベント発生時にログを出力します。</p>
 			<p>対象としているイベントは下記です。(一部のイベントはブラウザクローズ時に発生するものなので見ることはできません。)</p>
