@@ -52,15 +52,16 @@ $(function() {
 	 * - authToken
 	 * - onOpen(event)
 	 * - onClose(event)
+	 * - onMessage(event)
+	 * - onSocketError(event)
 	 * - onRequest(command, data)
-	 * - onMessage(data, startTime)
-	 * - onServerError(msg)
+	 * - onServerError(data)
 	 */
 	room.Connection = function(settings) {
 		function request(params) {
 			logger.log("request", params);
 			if (!isConnected()) {
-				if (retryCount < settings.maxRetry) {
+				if (openning || retryCount < settings.maxRetry) {
 					ready(function() {
 						request(params);
 					});
@@ -105,6 +106,7 @@ $(function() {
 		function off(name) {
 			delete listeners[name];
 			delete errors[name];
+			return self;
 		}
 		function onOpen(event) {
 			function authError(data) {
@@ -137,14 +139,14 @@ $(function() {
 		}
 		function onMessage(event) {
 			logger.log("receive", event.data);
+			if (settings.onMessage) {
+				settings.onMessage(event);
+			}
 			var data = JSON.parse(event.data),
 				startTime = times[data.id],
 				func = null;
 			if (startTime) {
 				delete times[data.id];
-			}
-			if (settings.onMessage) {
-				settings.onMessage(data, startTime);
 			}
 			if (data.type == "error") {
 				if (data.id && errors[data.id]) {
@@ -262,7 +264,7 @@ $(function() {
 			}
 		});
 		if (settings.noopCommand) {
-			on("noopCommand", function() {});
+			on(settings.noopCommand, function() {});
 		}
 		$.extend(this, {
 			"request" : request,
