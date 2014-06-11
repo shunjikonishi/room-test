@@ -4,10 +4,10 @@ version := "1.0-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
   cache,
-  "net.debasishg" %% "redisclient" % "2.12"
+  "net.debasishg" %% "redisclient" % "2.13"
 )     
 
